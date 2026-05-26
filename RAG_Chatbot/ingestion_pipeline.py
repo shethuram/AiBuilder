@@ -124,7 +124,7 @@ if __name__ == "__main__":
     main()
 
 
-# example of how long chain document looks 
+# example of how langchain document looks 
 
 # documents = [
 #    Document(
