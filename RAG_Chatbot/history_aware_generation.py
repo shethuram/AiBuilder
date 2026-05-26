@@ -47,13 +47,39 @@ def ask_question(user_question):
         preview = '\n'.join(lines)
         print(f"  Doc {i}: {preview}...")
     
-    # Step 3: Create final prompt
+    # Step 3: Create final prompt with citations
+
+    document_text = []
+
+    for i, doc in enumerate(docs, 1):
+
+        source = doc.metadata.get("source", "Unknown Source")
+
+        chunk_id = doc.metadata.get("chunk_id", "N/A")
+
+        document_text.append(
+            f"""
+    Document {i}
+    Source: {source}
+    Chunk ID: {chunk_id}
+
+    Content:
+    {doc.page_content}
+    """
+        )
+
     combined_input = f"""Based on the following documents, please answer this question: {user_question}
 
     Documents:
-    {"\n".join([f"- {doc.page_content}" for doc in docs])}
+    {"\n".join(document_text)}
 
-    Please provide a clear, helpful answer using only the information from these documents. If you can't find the answer in the documents, say "I don't have enough information to answer that question based on the provided documents."
+    Please provide a clear, helpful answer using only the information from these documents.
+
+    At the end of the answer, provide citations in this format:
+    Source: filename.txt | Chunk ID: X
+
+    If you can't find the answer in the documents, say:
+    "I don't have enough information to answer that question based on the provided documents."
     """
     
     # Step 4: Get the answer
