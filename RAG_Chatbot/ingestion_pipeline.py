@@ -49,6 +49,13 @@ def split_documents(documents, chunk_size=1000, chunk_overlap=100):
     )
     
     chunks = text_splitter.split_documents(documents)
+
+    # Add chunk ids to metadata
+    # can add required fields in metadata 
+    # ids are added to fetch later to show citations
+
+    for i, chunk in enumerate(chunks):
+        chunk.metadata["chunk_id"] = i         
     
     if chunks:
     
@@ -95,15 +102,54 @@ def main():
     
     # Check if vector store already exists
     if os.path.exists(persistent_directory):
-        print("✅ Vector store already exists. No need to re-process documents.")
-        
+
+        print("✅ Existing vector store found")
+
         embedding_model = OllamaEmbeddings(model="bge-m3")
+
         vectorstore = Chroma(
             persist_directory=persistent_directory,
-            embedding_function=embedding_model, 
+            embedding_function=embedding_model,
             collection_metadata={"hnsw:space": "cosine"}
         )
-        print(f"Loaded existing vector store with {vectorstore._collection.count()} documents")
+
+        # Get already existing sources from vector DB
+        existing_data = vectorstore.get(include=["metadatas"])
+
+        existing_sources = set()
+
+        for metadata in existing_data["metadatas"]:
+
+            if "source" in metadata:
+                existing_sources.add(metadata["source"])
+
+        # Load all docs
+        documents = load_documents(docs_path)
+
+        # Filter only NEW documents
+        new_documents = []
+
+        for doc in documents:
+
+            if doc.metadata["source"] not in existing_sources:
+                new_documents.append(doc)
+
+        # If no new docs found
+        if len(new_documents) == 0:
+            print("✅ No new documents found")
+            print(f"Loaded existing vector store with {vectorstore._collection.count()} documents")
+            return vectorstore
+
+        print(f"Found {len(new_documents)} new documents")
+
+        # Split only new docs
+        chunks = split_documents(new_documents)
+
+        # Add only new chunks
+        vectorstore.add_documents(chunks)
+
+        print("✅ New documents added to existing vector store")
+
         return vectorstore
     
     print("Persistent directory does not exist. Initializing vector store...\n")
