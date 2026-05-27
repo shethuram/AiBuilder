@@ -205,4 +205,4 @@ streamlit run streamlit_app.py
 
 ## Output
 
-Refer [Simple RAG Chat Output](output/Simple RAG Chat.pdf) for the output.
+Refer [Simple RAG Chat Output](RAG_Chatbot/output/Simple RAG Chat.pdf) for the output.
