@@ -1,12 +1,14 @@
 # RAG Chatbot with Conversation History
 
-A local Retrieval-Augmented Generation (RAG) pipeline that lets you chat with your documents using open-source models via Ollama.
+A simple local Retrieval-Augmented Generation (RAG) chatbot built using LangChain, ChromaDB, Ollama, and Streamlit.
+
+The project allows users to chat with their own documents using open-source local LLMs with conversation history support.
 
 ---
 
-## Architecture
+# Architecture
 
-```
+```text
 ┌─────────────┐     ┌──────────────────┐     ┌─────────────────┐
 │  Your Docs  │────▶│ Ingestion Pipeline│────▶│  ChromaDB Store │
 │  (.txt)     │     │ (chunk + embed)   │     │  (persisted)    │
@@ -27,87 +29,180 @@ A local Retrieval-Augmented Generation (RAG) pipeline that lets you chat with yo
 
 ---
 
-## How It Works
+# Features
 
-### 1. Ingestion (`ingestion_pipeline.py`)
-- Loads all `.txt` files from the `docs/` folder
-- Splits them into chunks (`1000 chars`, `100 overlap`)
-- Embeds each chunk using `bge-m3` via Ollama
-- Stores vectors in ChromaDB at `db/chroma_db`
-
-### 2. Retrieval (`retrieval_pipeline.py`)
-- Loads the persisted ChromaDB store
-- Runs similarity search with a score threshold (`≥ 0.3`)
-- Returns the top-K relevant chunks for a query
-
-### 3. Generation with History (`history_aware_generation.py`)
-- Rewrites the user question into a standalone search query using chat history
-- Retrieves top-3 relevant chunks
-- Feeds chunks + history into the LLM for a grounded answer
-- Stores each Q&A turn in `chat_history` for multi-turn context
+* Local RAG pipeline using Ollama
+* Conversation-aware question answering
+* ChromaDB persistent vector storage
+* Context-aware retrieval
+* Streamlit chat interface
+* Source + Chunk ID citations
+* No API keys required
 
 ---
 
-## Models Used
+# How It Works
 
-| Role        | Model              | Provider |
-|-------------|--------------------|----------|
-| Embeddings  | `bge-m3`           | Ollama   |
-| Chat / LLM  | `llama3.2:3b`      | Ollama   |
+## 1. Ingestion (`ingestion_pipeline.py`)
 
-> All models run **locally** — no API keys needed.
+* Loads `.txt` documents from the `docs/` folder
+* Splits documents into chunks
+* Generates embeddings using `bge-m3`
+* Stores embeddings in ChromaDB
+
+## 2. Retrieval (`retrieval_pipeline.py`)
+
+* Loads persisted vector database
+* Performs similarity search
+* Retrieves top relevant chunks
+
+## 3. Generation (`history_aware_generation.py`)
+
+* Uses conversation history to rewrite queries
+* Retrieves relevant chunks
+* Sends chunks + history to the LLM
+* Generates grounded answers with citations
+
+## 4. Streamlit UI (`streamlit_app.py`)
+
+* Simple chatbot interface
+* Maintains session chat history
+* Displays user and assistant messages interactively
 
 ---
 
-## Project Structure
+# Models Used
 
-```
+| Role       | Model         | Provider |
+| ---------- | ------------- | -------- |
+| Embeddings | `bge-m3`      | Ollama   |
+| LLM        | `llama3.2:3b` | Ollama   |
+
+> All models run locally.
+
+---
+
+# Project Structure
+
+```text
 project/
-├── docs/                        # Put your .txt documents here
+├── docs/                        
 ├── db/
-│   └── chroma_db/               # Auto-created vector store
-├── ingestion_pipeline.py        # Step 1: ingest & embed docs
-├── retrieval_pipeline.py        # Step 2: test retrieval
-├── history_aware_generation.py  # Step 3: chat with history
-└── .env                         # Environment variables
+│   └── chroma_db/
+├── ingestion_pipeline.py
+├── retrieval_pipeline.py
+├── history_aware_generation.py
+├── streamlit_app.py
+├── .env
+└── README.md
 ```
 
 ---
 
-## Quick Start
+# Installation
 
-**1. Install dependencies**
+## 1. Create Virtual Environment
+
 ```bash
-pip install langchain langchain-chroma langchain-ollama langchain-openai python-dotenv
+python -m venv venv
 ```
 
-**2. Pull models via Ollama**
+## 2. Activate Environment
+
+### Windows
+
+```bash
+venv\Scripts\activate
+```
+
+### Linux / Mac
+
+```bash
+source venv/bin/activate
+```
+
+---
+
+# Install Dependencies
+
+```bash
+pip install streamlit langchain langchain-community langchain-chroma langchain-ollama langchain-openai chromadb python-dotenv
+```
+
+---
+
+# Pull Ollama Models
+
 ```bash
 ollama pull bge-m3
 ollama pull llama3.2:3b
 ```
 
-**3. Add your documents**
+---
+
+# Add Documents
+
+Create a `docs/` folder and place your `.txt` files inside it.
+
 ```bash
 mkdir docs
-# copy your .txt files into docs/
-```
-
-**4. Ingest documents**
-```bash
-python ingestion_pipeline.py
-```
-
-**5. Start chatting**
-```bash
-python history_aware_generation.py
 ```
 
 ---
 
-## Vector Store
+# Run Ingestion Pipeline
 
-- **Engine:** ChromaDB (local, persistent)
-- **Distance metric:** Cosine similarity
-- **Chunk size:** 1000 characters | **Overlap:** 100 characters
-- **Retrieval:** Top-K with optional score threshold (`≥ 0.3`)
+```bash
+python ingestion_pipeline.py
+```
+
+This creates the ChromaDB vector store inside:
+
+```text
+db/chroma_db
+```
+
+---
+
+# Start Streamlit Chatbot
+
+```bash
+streamlit run streamlit_app.py
+```
+
+---
+
+# Vector Store Details
+
+* Vector DB: ChromaDB
+* Embedding Model: `bge-m3`
+* Similarity Metric: Cosine Similarity
+* Chunk Size: 1000
+* Chunk Overlap: 100
+* Retrieval: Top-K Similarity Search
+
+---
+
+# Example Workflow
+
+1. Add documents to `docs/`
+2. Run ingestion pipeline
+3. Launch Streamlit app
+4. Ask questions about your documents
+5. Receive grounded answers with citations
+
+---
+
+# Tech Stack
+
+* Python
+* LangChain
+* ChromaDB
+* Ollama
+* Streamlit
+
+---
+
+## Output
+
+Refer [Simple RAG Chat Output](output/Simple_RAG_Chat.pdf) for the output.
